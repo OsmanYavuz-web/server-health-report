@@ -34,9 +34,9 @@ pip3 install psutil
 ### 1. Dosyayı İndirin
 ```bash
 cd /opt
-wget https://github.com/OsmanYavuz-web/server-health-report/server-health-report.py
+wget [https://github.com/OsmanYavuz-web/server-health-report/server-health-report.py](https://raw.githubusercontent.com/OsmanYavuz-web/server-health-report/refs/heads/main/server-health-report.py)
 # veya
-curl -O https://github.com/OsmanYavuz-web/server-health-report/server-health-report.py
+curl -O [https://github.com/OsmanYavuz-web/server-health-report/server-health-report.py](https://raw.githubusercontent.com/OsmanYavuz-web/server-health-report/refs/heads/main/server-health-report.py)
 ```
 
 ### 2. Çalıştırma İznini Verin
