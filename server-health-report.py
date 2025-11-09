@@ -94,7 +94,7 @@ def svg_bar(percent, width=200, height=12, color="#4CAF50"):
 def gather_system_info():
     """Sistem bilgilerini topla (CPU, RAM, Disk, süreçler)"""
     info = {}
-    info['time'] = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    info['time'] = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     info['uptime'] = safe_run(["uptime", "-p"]).strip()
     info['load'] = os.getloadavg() if hasattr(os, "getloadavg") else (0,0,0)
     info['cpu_percent'] = psutil.cpu_percent(interval=1)
@@ -106,7 +106,9 @@ def gather_system_info():
     info['disk_total'] = disk.total
     info['disk_used'] = disk.used
     info['disk_percent'] = disk.percent
-    info['top_cpu'] = [(p.pid, p.name(), p.cpu_percent(interval=0.1), p.memory_percent()) for p in psutil.process_iter(['name'])]
+    # İlk çağrıda interval=None kullanarak anında değer al (blocking olmaz)
+    # Sonraki çağrılar için cpu_percent() zaten önceki çağrıdan beri geçen süreyi kullanır
+    info['top_cpu'] = [(p.pid, p.name(), p.cpu_percent(interval=None), p.memory_percent()) for p in psutil.process_iter(['name'])]
     # Sırala
     info['top_cpu'] = sorted(info['top_cpu'], key=lambda x: x[2], reverse=True)[:10]
     info['top_mem'] = sorted(info['top_cpu'], key=lambda x: x[3], reverse=True)[:10]
@@ -303,7 +305,7 @@ def analyze_slow_log_and_suggest():
     # SQL dosyasını yaz
     if out_sugs:
         with open(SUGGESTION_SQL, "w") as f:
-            f.write("-- Veritabanı index önerileri oluşturulma tarihi: " + datetime.datetime.utcnow().isoformat() + " UTC\n")
+            f.write("-- Veritabanı index önerileri oluşturulma tarihi: " + datetime.datetime.now(datetime.UTC).isoformat() + " UTC\n")
             for t,c,sq,qtext in out_sugs:
                 f.write(sq + "\n")
         # Uygulama scriptini oluştur
@@ -332,7 +334,7 @@ echo "Tamamlandı."
 # ===============================
 def build_html(info, mysql_status, slow_summary, suggestions):
     """Güzel bir HTML rapor oluştur"""
-    now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     html_parts = []
     html_parts.append(f"<h2>Sunucu Sağlık Raporu — {html.escape(socket.gethostname())}</h2>")
     html_parts.append(f"<p><em>Rapor zamanı: {now}</em></p>")
