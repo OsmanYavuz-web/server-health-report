@@ -349,11 +349,11 @@ def build_html(info, mysql_status, slow_summary, suggestions):
     # Bellek
     mem_used = human_bytes(info['mem_used'])
     mem_total = human_bytes(info['mem_total'])
-    html_parts.append(f"<td style='padding:8px;border:1px solid #eee'><strong>Bellek</strong><br>{mem_used} / {mem_total} ({info['mem_percent']}%)<br>{svg_bar(info['mem_percent'],'#2196F3')}</td>")
+    html_parts.append(f"<td style='padding:8px;border:1px solid #eee'><strong>Bellek</strong><br>{mem_used} / {mem_total} ({info['mem_percent']}%)<br>{svg_bar(info['mem_percent'], color='#2196F3')}</td>")
     # Disk
     disk_used = human_bytes(info['disk_used'])
     disk_total = human_bytes(info['disk_total'])
-    html_parts.append(f"<td style='padding:8px;border:1px solid #eee'><strong>Disk /</strong><br>{disk_used} / {disk_total} ({info['disk_percent']}%)<br>{svg_bar(info['disk_percent'],'#FF9800')}</td>")
+    html_parts.append(f"<td style='padding:8px;border:1px solid #eee'><strong>Disk /</strong><br>{disk_used} / {disk_total} ({info['disk_percent']}%)<br>{svg_bar(info['disk_percent'], color='#FF9800')}</td>")
     html_parts.append("</tr></table>")
     # En çok CPU kullanan süreçler
     html_parts.append("<h3>En Çok CPU Kullanan Süreçler</h3><table style='width:100%;border-collapse:collapse'>")
