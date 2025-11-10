@@ -38,8 +38,19 @@ SMTP_PASS = "SMTP_PASSWORD"
 MAIL_TO = "RECEIVER_EMAIL"
 
 # Veritabanı ayarları - mysql kontrolleri ve yavaş sorgu analizi için kullanılır
+DB_HOST = "127.0.0.1"  # localhost yerine 127.0.0.1 kullanın (socket sorunu için)
+DB_PORT = "3306"
 DB_USER = "root"
 DB_PASS = "YOUR_DB_PASSWORD"
+# Alternatif: MySQL config dosyası kullan (daha güvenli)
+# ~/.my.cnf dosyası oluşturun:
+# [client]
+# host=127.0.0.1
+# port=3306
+# user=root
+# password=YOUR_PASSWORD
+# Sonra DB_USE_CONFIG_FILE = True yapın
+DB_USE_CONFIG_FILE = False  # True yaparsanız DB_USER/DB_PASS yerine ~/.my.cnf kullanılır
 
 # Hangi veritabanları analiz edilecek: 'site' modu (önerilen) mysql/sys/performance_schema'yı otomatik atlar
 DB_ANALYZE_MODE = 2  # 1=tüm VT'ler, 2=site VT'leri (önerilen), 3=aşağıdaki manuel liste
@@ -119,11 +130,25 @@ def gather_system_info():
 # ===============================
 def mysql_query_raw(query):
     """MySQL sorgusu çalıştır ve çıktıyı döndür"""
-    cmd = ["mysql", f"-u{DB_USER}", f"-p{DB_PASS}", "-N", "-B", "-e", query]
+    # Config dosyası kullanılacaksa
+    if DB_USE_CONFIG_FILE:
+        cmd = ["mysql", "-N", "-B", "-e", query]
+    # Şifre boşsa -p kullanma
+    elif DB_PASS:
+        cmd = ["mysql", f"-h{DB_HOST}", f"-P{DB_PORT}", f"-u{DB_USER}", f"-p{DB_PASS}", "-N", "-B", "-e", query]
+    else:
+        cmd = ["mysql", f"-h{DB_HOST}", f"-P{DB_PORT}", f"-u{DB_USER}", "-N", "-B", "-e", query]
     try:
-        out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode()
+        out = subprocess.check_output(cmd, stderr=subprocess.PIPE).decode()
         return out
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        # Hata mesajını yazdır
+        err_msg = e.stderr.decode() if e.stderr else str(e)
+        print(f"MySQL Bağlantı Hatası: {err_msg}")
+        print(f"Komut: mysql -h{DB_HOST} -P{DB_PORT} -u{DB_USER} -p*** -N -B -e '{query[:50]}...'")
+        return ""
+    except Exception as e:
+        print(f"MySQL Beklenmeyen Hata: {str(e)}")
         return ""
 
 def list_databases():
@@ -310,7 +335,7 @@ def analyze_slow_log_and_suggest():
                 f.write(sq + "\n")
         # Uygulama scriptini oluştur
         create_apply_script()
-    return ("\n".join([f"{t}.{c}" for t,c,_,__ in out_sugs]), out_sugs)
+    return (out_sugs, out_sugs)
 
 def create_apply_script():
     """Index önerilerini uygulayacak basit bir bash script oluştur"""
@@ -323,7 +348,7 @@ if [ ! -f "$SQLFILE" ]; then
   exit 1
 fi
 echo "$SQLFILE dosyasından indexler uygulanıyor..."
-mysql -u{DB_USER} -p'{DB_PASS}' < "$SQLFILE"
+mysql -h{DB_HOST} -P{DB_PORT} -u{DB_USER} -p'{DB_PASS}' < "$SQLFILE"
 echo "Tamamlandı."
 """
     Path(APPLY_SCRIPT).write_text(content)
@@ -431,10 +456,10 @@ def main():
             mysql_status = {}
         # Yavaş sorguları analiz et ve index öner
         try:
-            txt_summary, slow_summary = analyze_slow_log_and_suggest()
+            slow_summary, _ = analyze_slow_log_and_suggest()
         except Exception as e:
             slow_summary = []
-        html = build_html(info, mysql_status, txt_summary, slow_summary)
+        html = build_html(info, mysql_status, slow_summary, slow_summary)
         ok, err = send_mail(html, subject=REPORT_SUBJECT)
         if not ok:
             print("E-posta gönderilemedi:", err)

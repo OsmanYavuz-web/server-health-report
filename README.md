@@ -83,8 +83,52 @@ MAIL_TO = "alici@email.com"            # Rapor alacak e-posta
 
 #### Veritabanı Ayarları (Opsiyonel)
 ```python
+DB_HOST = "127.0.0.1"                  # localhost yerine 127.0.0.1 kullanın
+DB_PORT = "3306"                       # MySQL port
 DB_USER = "root"                       # MySQL kullanıcı adı
 DB_PASS = "mysql_sifreniz"             # MySQL şifresi
+DB_USE_CONFIG_FILE = False             # True yaparsanız ~/.my.cnf kullanılır
+```
+
+**MySQL Bağlantı Sorunları (N/A görüyorsanız):**
+
+**Yöntem 1: CloudLinux/cPanel Kullanıcıları**
+```bash
+# Master credentials'ı öğrenin
+clpctl db:show:master-credentials
+
+# Çıktıdaki bilgileri script'e girin:
+# DB_HOST = "127.0.0.1"
+# DB_PORT = "3306"
+# DB_USER = "root"
+# DB_PASS = "gösterilen_şifre"
+```
+
+**Yöntem 2: Config Dosyası (Önerilen - Daha Güvenli)**
+```bash
+# ~/.my.cnf dosyası oluşturun
+nano ~/.my.cnf
+
+# İçeriği:
+[client]
+host=127.0.0.1
+port=3306
+user=root
+password=YOUR_MYSQL_PASSWORD
+
+# İzinleri düzeltin
+chmod 600 ~/.my.cnf
+
+# Script'te şunu değiştirin:
+DB_USE_CONFIG_FILE = True
+```
+
+**Yöntem 3: Manuel Test**
+```bash
+# MySQL bağlantısını test edin (localhost yerine 127.0.0.1 kullanın)
+mysql -h127.0.0.1 -P3306 -uroot -p -e "SHOW STATUS LIKE 'Threads_connected';"
+
+# Çalışıyorsa script'teki DB_HOST, DB_PORT, DB_USER ve DB_PASS'i kontrol edin
 ```
 
 #### Analiz Modu
