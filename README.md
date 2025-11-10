@@ -44,9 +44,19 @@ curl -O https://raw.githubusercontent.com/OsmanYavuz-web/server-health-report/re
 chmod +x server-health-report.py
 ```
 
-### 3. Python Bağımlılıklarını Kurun
+### 3. Virtual Environment Oluşturun ve Bağımlılıkları Kurun
 ```bash
+# Virtual environment oluştur
+python3 -m venv /opt/venv
+
+# Virtual environment'ı aktifleştir
+source /opt/venv/bin/activate
+
+# psutil kütüphanesini kur
 pip3 install psutil
+
+# Deaktive et
+deactivate
 ```
 
 ### 4. Konfigürasyon Ayarlarını Yapın
@@ -86,11 +96,8 @@ DB_ANALYZE_MODE = 2  # 1=tüm VT'ler, 2=site VT'leri (önerilen), 3=manuel liste
 
 ### Manuel Çalıştırma
 ```bash
-# Root olarak
-sudo python3 server-health-report.py
-
-# veya direkt
-sudo ./server-health-report.py
+# Virtual environment Python'u ile çalıştır
+sudo /opt/venv/bin/python3 /opt/server-health-report.py
 ```
 
 ### Çıktı
@@ -107,17 +114,17 @@ Rapor başarıyla e-posta ile gönderildi.
 sudo crontab -e
 
 # Şu satırı ekleyin:
-0 9 * * * /usr/bin/python3 /opt/server-health-report.py
+0 9 * * * /opt/venv/bin/python3 /opt/server-health-report.py >> /var/log/server-health.log 2>&1
 ```
 
 ### Haftalık Rapor (Her Pazartesi 09:00)
 ```bash
-0 9 * * 1 /usr/bin/python3 /opt/server-health-report.py
+0 9 * * 1 /opt/venv/bin/python3 /opt/server-health-report.py >> /var/log/server-health.log 2>&1
 ```
 
 ### Saatlik Rapor
 ```bash
-0 * * * * /usr/bin/python3 /opt/server-health-report.py
+0 * * * * /opt/venv/bin/python3 /opt/server-health-report.py >> /var/log/server-health.log 2>&1
 ```
 
 ## 📊 Rapor İçeriği
@@ -262,6 +269,8 @@ Manuel konum belirtmek için `DEFAULT_SLOWLOG` değişkenini düzenleyin.
 
 ```
 /opt/server-health-report.py              # Ana script
+/opt/venv/                                # Python virtual environment
+/var/log/server-health.log                # Cron çıktı log dosyası
 /var/log/db_index_suggestions.sql         # Index önerileri (otomatik oluşturulur)
 /usr/local/bin/apply-db-indexes.sh        # Index uygulama scripti (otomatik)
 /var/log/mysql/slow.log                   # MySQL slow query log
@@ -370,26 +379,29 @@ sudo wget https://github.com/OsmanYavuz-web/server-health-report/server-health-r
 # 2. İzin verin
 sudo chmod +x server-health-report.py
 
-# 3. Bağımlılıkları kurun
-sudo pip3 install psutil
+# 3. Virtual environment oluşturun
+sudo python3 -m venv /opt/venv
 
-# 4. Ayarları yapın
+# 4. Bağımlılıkları kurun
+sudo /opt/venv/bin/pip3 install psutil
+
+# 5. Ayarları yapın
 sudo nano server-health-report.py
 # SMTP ve DB bilgilerini girin
 
-# 5. Test edin
-sudo python3 server-health-report.py
+# 6. Test edin
+sudo /opt/venv/bin/python3 /opt/server-health-report.py
 
-# 6. Cron ekleyin (opsiyonel)
+# 7. Cron ekleyin (opsiyonel)
 sudo crontab -e
-# Ekleyin: 0 9 * * * /usr/bin/python3 /opt/server-health-report.py
+# Ekleyin: 0 9 * * * /opt/venv/bin/python3 /opt/server-health-report.py >> /var/log/server-health.log 2>&1
 ```
 
 ## 📞 Destek
 
 Sorun yaşıyorsanız:
-1. Log dosyalarını kontrol edin: `/var/log/syslog` veya `/var/log/cron`
-2. Manuel çalıştırarak hata mesajlarını görün
+1. Log dosyalarını kontrol edin: `/var/log/server-health.log`, `/var/log/syslog` veya `/var/log/cron`
+2. Manuel çalıştırarak hata mesajlarını görün: `sudo /opt/venv/bin/python3 /opt/server-health-report.py`
 3. MySQL ve SMTP ayarlarını doğrulayın
 
 ---
