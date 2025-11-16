@@ -108,6 +108,9 @@ def gather_system_info():
     info['time'] = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     info['uptime'] = safe_run(["uptime", "-p"]).strip()
     info['load'] = os.getloadavg() if hasattr(os, "getloadavg") else (0,0,0)
+    # CPU warm-up
+    psutil.cpu_percent(interval=None)
+    # Toplam CPU
     info['cpu_percent'] = psutil.cpu_percent(interval=1)
     mem = psutil.virtual_memory()
     info['mem_total'] = mem.total
@@ -117,9 +120,11 @@ def gather_system_info():
     info['disk_total'] = disk.total
     info['disk_used'] = disk.used
     info['disk_percent'] = disk.percent
-    # İlk çağrıda interval=None kullanarak anında değer al (blocking olmaz)
-    # Sonraki çağrılar için cpu_percent() zaten önceki çağrıdan beri geçen süreyi kullanır
-    info['top_cpu'] = [(p.pid, p.name(), p.cpu_percent(interval=None), p.memory_percent()) for p in psutil.process_iter(['name'])]
+    # Process CPU
+    info['top_cpu'] = [
+        (p.pid, p.name(), p.cpu_percent(interval=0.1), p.memory_percent())
+        for p in psutil.process_iter(['name'])
+    ]
     # Sırala
     info['top_cpu'] = sorted(info['top_cpu'], key=lambda x: x[2], reverse=True)[:10]
     info['top_mem'] = sorted(info['top_cpu'], key=lambda x: x[3], reverse=True)[:10]
