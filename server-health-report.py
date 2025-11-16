@@ -112,9 +112,7 @@ def gather_system_info():
     info['load'] = os.getloadavg() if hasattr(os, "getloadavg") else (0, 0, 0)
 
     # CPU warm-up
-    psutil.cpu_percent(interval=None)
-    time.sleep(1)
-    info['cpu_percent'] = psutil.cpu_percent(interval=None)
+    info['cpu_percent'] = psutil.cpu_percent(interval=1)
 
     procs = []
     for p in psutil.process_iter(['name']):
